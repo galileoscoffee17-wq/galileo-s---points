@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galileo's Points</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0A0A0A;font-family:system-ui,sans-serif;color:#F5F0E8;}
+input:focus{outline:none;}
+button{transition:all 0.2s;font-family:inherit;}
+button:hover:not(:disabled){opacity:0.85;transform:translateY(-1px);}
+button:disabled{opacity:0.35;cursor:not-allowed!important;transform:none!important;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+
+const B = "#F5C200";
+const SCRIPT = "https://script.google.com/macros/s/AKfycbxe7_CdpPrfSRujWbmOMu4ExezdU8d6xo6mI_W2IuGs4IyCsZXkfTAylF8o0AG2kMEq/exec";
+
+const MENU_CATS = [
+  { cat: "Desayunos", emoji: "🍳", items: [
+    { id:"d1",  name:"Huevo con Jamon",             price:2.75 },
+    { id:"d2",  name:"Sandwich Maananero",           price:2.50 },
+    { id:"d3",  name:"El Morralito",                 price:2.75 },
+    { id:"d4",  name:"Desayuno Tipico",              price:2.75 },
+    { id:"d5",  name:"Omelette con Papitas Doradas", price:2.75 },
+    { id:"d6",  name:"Chilaquilas Rellenas",         price:2.75 },
+    { id:"d7",  name:"Mini Pancakes",                price:2.75 },
+    { id:"d8",  name:"Omelette Tipico",              price:2.75 },
+    { id:"d9",  name:"Omelette Jamon y Queso",       price:2.75 },
+    { id:"d10", name:"Waffles Fresa y Guineo",       price:3.00 },
+    { id:"d11", name:"Panini Maananero",              price:3.25 },
+    { id:"d12", name:"Tostadas Aguacate y Huevo",    price:2.50 },
+    { id:"d13", name:"Torre de Pancakes",            price:2.50 },
+    { id:"d14", name:"Sandwich de Jamon Maananero",  price:2.00 },
+    { id:"d15", name:"Huevos Rancheros",             price:2.75 },
+    { id:"d16", name:"Desayuno Clasico",             price:2.75 },
+    { id:"d17", name:"Sandwich de Pollo Maananero",  price:2.50 },
+    { id:"d18", name:"Desayuno Americano",           price:3.00 },
+    { id:"d19", name:"Crepa de Guineo Desayuno",     price:2.25 },
+    { id:"d20", name:"Crepa de Fresa Desayuno",      price:2.25 },
+    { id:"d21", name:"Crepa Mixta Desayuno",         price:2.50 },
+  ]},
+  { cat: "Bebidas", emoji: "☕", items: [
+    { id:"bv1", name:"Capuchino",        price:1.00 },
+    { id:"bv2", name:"Cafe",             price:0.50 },
+    { id:"bv3", name:"Cafe con Cremora", price:0.75 },
+  ]},
+  { cat: "Mas Pedidos", emoji: "⭐", items: [
+    { id:"m1", name:"Mixto de la Casa",     price:4.50 },
+    { id:"m2", name:"Smash Doble",          price:4.50 },
+    { id:"m3", name:"Pechuga de Viernes",   price:3.00 },
+    { id:"m4", name:"Churrasco de la Casa", price:4.00 },
+  ]},
+  { cat: "Mexicano", emoji: "🌮", items: [
+    { id:"mx1", name:"Quesadilla Palta", price:3.25 },
+    { id:"mx2", name:"Burrito Palta",    price:3.25 },
+    { id:"mx3", name:"Burrito Mixto",    price:3.00 },
+  ]},
+  { cat: "Parrilla", emoji: "🥩", items: [
+    { id:"p1", name:"Carne en Salsa Chipotle",    price:3.75 },
+    { id:"p2", name:"Carne a la Riqui",           price:3.25 },
+    { id:"p3", name:"Carne de Res a la Parrilla", price:3.50 },
+    { id:"p4", name:"Brochetas Mixtas BBQ",       price:3.50 },
+    { id:"p5", name:"Brochetas de Pollo BBQ",     price:3.50 },
+  ]},
+  { cat: "Pechugas", emoji: "🍗", items: [
+    { id:"pe1",  name:"Pechuga Perez",                   price:3.50 },
+    { id:"pe2",  name:"Pechuga Tipica",                  price:3.00 },
+    { id:"pe3",  name:"Pechuga Juliana",                 price:3.00 },
+    { id:"pe4",  name:"Pechuga Jonny",                   price:3.25 },
+    { id:"pe5",  name:"Pechuga Ejecutiva",               price:3.50 },
+    { id:"pe6",  name:"Pechuga a la Riqui",              price:3.25 },
+    { id:"pe7",  name:"Pechuga en Salsa Chipotle",       price:2.75 },
+    { id:"pe8",  name:"Pechuga en Crema de Hongos",      price:2.75 },
+    { id:"pe9",  name:"Pechuga en Crema de Jalapeno",    price:2.75 },
+    { id:"pe10", name:"Filete de Pechuga a la Parrilla", price:2.50 },
+    { id:"pe11", name:"Pechuga Crispy",                  price:3.25 },
+  ]},
+  { cat: "Hamburguesas", emoji: "🍔", items: [
+    { id:"h1", name:"Burger de Pollo o Res",    price:3.50 },
+    { id:"h2", name:"Onion BBQ",                price:3.75 },
+    { id:"h3", name:"Smash Sencilla",           price:3.50 },
+    { id:"h4", name:"Smash Doble Burger",       price:4.50 },
+    { id:"h5", name:"Meat White",               price:3.75 },
+    { id:"h6", name:"Cheese Sauce",             price:3.95 },
+    { id:"h7", name:"Papas con Queso y Tocino", price:3.45 },
+  ]},
+  { cat: "Frescos", emoji: "🥗", items: [
+    { id:"f1", name:"Ensalada de Pollo",   price:3.25 },
+    { id:"f2", name:"Ensalada de Res",     price:3.75 },
+    { id:"f3", name:"Pechuga Fresh",       price:3.25 },
+    { id:"f4", name:"Ensalada Gregoriana", price:3.50 },
+    { id:"f5", name:"Chicken Wrap",        price:3.75 },
+  ]},
+  { cat: "Sandwiches", emoji: "🥪", items: [
+    { id:"s1", name:"Panini de Pollo",      price:3.25 },
+    { id:"s2", name:"Hamburguesa Especial", price:3.75 },
+    { id:"s3", name:"Sandwich de Jamon",    price:2.00 },
+    { id:"s4", name:"Sandwich de Pollo",    price:2.50 },
+    { id:"s5", name:"Steak Cheese",         price:4.00 },
+  ]},
+  { cat: "Frappes y Postres", emoji: "🧋", items: [
+    { id:"fr1", name:"Frappe Mocca",          price:2.25 },
+    { id:"fr2", name:"Frappe Caramelo",       price:2.25 },
+    { id:"fr3", name:"Frappe Oreo",           price:2.50 },
+    { id:"fr4", name:"Frappe Fresa",          price:2.50 },
+    { id:"fr5", name:"Frappe Nutella",        price:3.00 },
+    { id:"cr1", name:"Crepa Mixta",           price:2.50 },
+    { id:"cr2", name:"Crepa de Guineo",       price:2.25 },
+    { id:"cr3", name:"Crepa de Fresa",        price:2.25 },
+    { id:"cr4", name:"Crepa Nutella Oreo",    price:2.50 },
+    { id:"cr5", name:"Crepa de Nutella",      price:2.00 },
+    { id:"w1",  name:"Waffles Nutella Guineo",price:3.00 },
+    { id:"w2",  name:"Waffles Nutella Fresa", price:3.00 },
+    { id:"w3",  name:"Waffles Mixtos",        price:3.50 },
+  ]},
+  { cat: "Extras", emoji: "🔥", items: [
+    { id:"ex1", name:"Aguacate",             price:0.50 },
+    { id:"ex2", name:"Queso",                price:0.50 },
+    { id:"ex3", name:"Tortilla Frita",       price:0.50 },
+    { id:"ex4", name:"Papas Fritas",         price:1.00 },
+    { id:"ex5", name:"Salsa de Queso",       price:0.75 },
+    { id:"ex6", name:"Cebolla Caramelizada", price:0.75 },
+  ]},
+];
+
+const REWARDS = [
+  { id:1, label:"Crepa gratis",             pts:8,  color:"#F5C200" },
+  { id:2, label:"Frappe gratis",            pts:15, color:"#2EC4B6" },
+  { id:3, label:"Extra doble gratis",       pts:25, color:"#9B5DE5" },
+  { id:4, label:"Plato de los mas pedidos", pts:40, color:"#E71D36" },
+  { id:5, label:"Plato + Frappe",           pts:70, color:"#F15BB5" },
+];
+
+const calcPts = t => Math.floor(t / 2.5);
+const today   = () => new Date().toISOString().split("T")[0];
+const fmt     = n => "$" + Number(n).toFixed(2);
+const uid     = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const levelOf = p => p >= 40 ? {label:"VIP",color:"#F15BB5"} : p >= 15 ? {label:"Gold",color:B} : {label:"Nuevo",color:"#888"};
+const allItems = () => MENU_CATS.flatMap(c => c.items);
+
+// ── API via JSONP (works from browser iframes) ──────────────────────────────────
+function jsonp(params) {
+  return new Promise((resolve, reject) => {
+    const cb = "cb_" + Math.random().toString(36).slice(2);
+    const qs = Object.entries({...params, callback: cb}).map(([k,v]) => k + "=" + encodeURIComponent(v)).join("&");
+    const script = document.createElement("script");
+    script.src = SCRIPT + "?" + qs;
+    window[cb] = (data) => { resolve(data); delete window[cb]; document.body.removeChild(script); };
+    script.onerror = () => reject(new Error("JSONP error"));
+    document.body.appendChild(script);
+    setTimeout(() => reject(new Error("Timeout")), 15000);
+  });
+}
+async function apiGet(action) {
+  return jsonp({ action });
+}
+async function apiPost(body) {
+  // Send all fields as GET params via JSONP
+  return jsonp(body);
+}
+
+// ── STYLES ──────────────────────────────────────────────────────────────────────
+const g = {
+  page:    { minHeight:"100vh", background:"#0A0A0A", fontFamily:"system-ui,sans-serif", color:"#F5F0E8" },
+  nav:     { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 20px", background:"#111", borderBottom:"1px solid #222", position:"sticky", top:0, zIndex:50, flexWrap:"wrap", gap:8 },
+  logo:    { fontWeight:900, fontSize:18, color:B },
+  main:    { maxWidth:960, margin:"0 auto", padding:"20px 16px" },
+  card:    { background:"#161616", border:"1px solid #222", borderRadius:16, padding:18, marginBottom:16 },
+  h2:      { fontWeight:800, fontSize:16, margin:"0 0 14px" },
+  input:   { background:"#111", border:"1px solid #333", borderRadius:8, padding:"10px 12px", color:"#F5F0E8", fontSize:14, width:"100%", boxSizing:"border-box", outline:"none" },
+  flex:    { display:"flex", gap:8, alignItems:"center" },
+  btn:     (v="y") => ({ padding:"9px 16px", borderRadius:8, border:"none", cursor:"pointer", fontWeight:700, fontSize:13, background:v==="y"?B:v==="r"?"#ff333322":v==="g"?"#22c55e22":"#222", color:v==="y"?"#000":v==="r"?"#ff5555":v==="g"?"#22c55e":"#aaa" }),
+  sm:      { padding:"6px 11px", fontSize:12 },
+  tbl:     { width:"100%", borderCollapse:"collapse" },
+  th:      { textAlign:"left", fontSize:10, fontWeight:700, color:"#555", textTransform:"uppercase", letterSpacing:1, padding:"0 8px 8px", borderBottom:"1px solid #1e1e1e" },
+  td:      { padding:"10px 8px", fontSize:13, borderBottom:"1px solid #1a1a1a", verticalAlign:"middle" },
+  badge:   c => ({ background:c+"22", color:c, padding:"2px 8px", borderRadius:12, fontSize:11, fontWeight:700, display:"inline-block" }),
+  overlay: { position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:16 },
+  modal:   { background:"#1a1a1a", border:"1px solid #333", borderRadius:18, padding:22, width:"100%", maxHeight:"90vh", overflowY:"auto" },
+  toast:   { position:"fixed", bottom:20, right:20, background:"#1a1a1a", border:"1px solid "+B, color:B, padding:"10px 16px", borderRadius:10, fontWeight:600, fontSize:13, zIndex:999 },
+  tab:     a => ({ padding:"7px 14px", borderRadius:8, border:"none", cursor:"pointer", fontWeight:600, fontSize:13, background:a?B:"transparent", color:a?"#000":"#777" }),
+  pill:    a => ({ padding:"5px 10px", borderRadius:8, border:"1px solid "+(a?B:"#333"), background:a?B+"18":"transparent", color:a?B:"#666", fontSize:12, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" }),
+  statg:   { display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:16 },
+  stat:    a => ({ background:"#161616", border:"1px solid "+a+"33", borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }),
+  sbar:    a => ({ position:"absolute", top:0, left:0, right:0, height:3, background:a }),
+};
+
+function Toast({msg,hide}) { return <div style={g.toast} onClick={hide}>✓ {msg}</div>; }
+
+function Ticket({order,client,close}) {
+  const lines = (Array.isArray(order.items)?order.items:[]).map(i=>"  - "+i).join("\n");
+  const text = ["GALILEO'S COFFEE","========================","Cliente: "+client.name,"Tel: "+client.phone,"Dir: "+(client.address||"—"),"Fecha: "+order.date,"========================",lines,"========================","TOTAL: "+fmt(order.total),"Puntos: +"+order.points+" pts (acum. "+client.points+")","========================","Gracias por su preferencia!"].join("\n");
+  return (
+    <div style={g.overlay} onClick={close}>
+      <div style={{...g.modal,maxWidth:440}} onClick={e=>e.stopPropagation()}>
+        <p style={{...g.h2,color:B}}>Ticket del pedido</p>
+        <pre style={{background:"#111",border:"1px solid #222",borderRadius:8,padding:14,fontSize:12,color:"#ccc",lineHeight:1.8,whiteSpace:"pre-wrap",margin:"0 0 14px"}}>{text}</pre>
+        <div style={g.flex}>
+          <button style={{...g.btn("y"),flex:1}} onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank")}>Enviar WhatsApp</button>
+          <button style={{...g.btn(),flex:1}} onClick={()=>navigator.clipboard&&navigator.clipboard.writeText(text)}>Copiar</button>
+          <button style={g.btn("r")} onClick={close}>✕</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderModal({client,onConfirm,close}) {
+  const [cat,setCat]   = useState(0);
+  const [q,setQ]       = useState("");
+  const [cart,setCart] = useState({});
+  const visible = q ? allItems().filter(i=>i.name.toLowerCase().includes(q.toLowerCase())) : MENU_CATS[cat].items;
+  const add = id => setCart(c=>({...c,[id]:(c[id]||0)+1}));
+  const sub = id => setCart(c=>{const n={...c};n[id]>1?n[id]--:delete n[id];return n;});
+  const items = Object.entries(cart).map(([id,qty])=>({...allItems().find(i=>i.id===id),qty}));
+  const total = items.reduce((a,i)=>a+i.price*i.qty,0);
+  const pts   = calcPts(total);
+  return (
+    <div style={g.overlay}>
+      <div style={{...g.modal,maxWidth:700}}>
+        <p style={{...g.h2,color:B,marginBottom:10}}>Pedido para {client.name}</p>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+          <div>
+            <input style={{...g.input,marginBottom:10}} placeholder="Buscar producto..." value={q} onChange={e=>setQ(e.target.value)} />
+            {!q&&(
+              <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:10}}>
+                {MENU_CATS.map((c,i)=><span key={c.cat} style={g.pill(cat===i)} onClick={()=>setCat(i)}>{c.emoji} {c.cat}</span>)}
+              </div>
+            )}
+            <div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:320,overflowY:"auto"}}>
+              {visible.map(item=>(
+                <div key={item.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#111",borderRadius:8,padding:"8px 10px",border:cart[item.id]?"1px solid "+B+"88":"1px solid #1e1e1e"}}>
+                  <span style={{fontSize:13,fontWeight:600}}>{item.name} <span style={{color:B,fontWeight:700}}>{fmt(item.price)}</span></span>
+                  <div style={g.flex}>
+                    {cart[item.id]&&<><button style={{...g.btn("r"),...g.sm}} onClick={()=>sub(item.id)}>−</button><span style={{minWidth:18,textAlign:"center",fontWeight:700}}>{cart[item.id]}</span></>}
+                    <button style={{...g.btn("y"),...g.sm}} onClick={()=>add(item.id)}>+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column"}}>
+            <p style={g.h2}>Resumen</p>
+            <div style={{flex:1,overflowY:"auto",maxHeight:260,marginBottom:10}}>
+              {items.length===0
+                ?<p style={{color:"#555",fontSize:13,textAlign:"center",paddingTop:32}}>Sin productos</p>
+                :items.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #1a1a1a",fontSize:13}}><span>{i.qty}x {i.name}</span><span style={{color:B,fontWeight:700}}>{fmt(i.price*i.qty)}</span></div>)
+              }
+            </div>
+            <div style={{background:"#111",borderRadius:10,padding:12,marginBottom:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:18,fontWeight:900,marginBottom:4}}><span>Total</span><span style={{color:B}}>{fmt(total)}</span></div>
+              <div style={{fontSize:12,color:"#777"}}>+{pts} puntos para {client.name}</div>
+            </div>
+            <div style={g.flex}>
+              <button style={{...g.btn("y"),flex:1}} onClick={()=>items.length&&onConfirm({items:items.map(i=>i.name),total,points:pts,date:today()})} disabled={!items.length}>Confirmar</button>
+              <button style={g.btn("r")} onClick={close}>✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminView({clients,setClients,sales,setSales,notify}) {
+  const [tab,setTab]           = useState("pedidos");
+  const [q,setQ]               = useState("");
+  const [saving,setSaving]     = useState(false);
+  const [nf,setNf]             = useState({name:"",phone:"",address:""});
+  const [showNew,setShowNew]   = useState(false);
+  const [orderFor,setOrderFor] = useState(null);
+  const [ticket,setTicket]     = useState(null);
+  const [tkClient,setTkClient] = useState(null);
+  const [showSpec,setShowSpec] = useState(false);
+  const [specName,setSpecName] = useState("");
+  const [specPrice,setSpecPrice] = useState("");
+  const [editClient,setEditClient] = useState(null);
+
+  const totalRev = sales.reduce((a,s)=>a+Number(s.total||0),0);
+  const todayRev = sales.filter(s=>s.date===today()).reduce((a,s)=>a+Number(s.total||0),0);
+  const pc={}; sales.forEach(s=>{const arr=Array.isArray(s.items)?s.items:String(s.items||"").split(","); arr.forEach(i=>{const k=i.trim();if(k)pc[k]=(pc[k]||0)+1;});});
+  const top = Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const fil = clients.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())||String(c.phone).includes(q));
+
+  async function reg() {
+    if(!nf.name||!nf.phone){notify("Completa nombre y telefono");return;}
+    if(clients.find(c=>String(c.phone)===String(nf.phone))){notify("Ese numero ya existe");return;}
+    setSaving(true);
+    const nc={id:uid(),name:nf.name,phone:nf.phone,address:nf.address,points:0,orders:0,joined:today(),history:[]};
+    try {
+      await apiPost({action:"addClient",...nc});
+      setClients([...clients,nc]);
+      setNf({name:"",phone:"",address:""});setShowNew(false);
+      notify(nf.name+" registrado y guardado en Google Sheets ✓");
+    } catch(e){ notify("Error guardando. Intentá de nuevo."); }
+    setSaving(false);
+  }
+
+  async function confirmOrder(order) {
+    setSaving(true);
+    const oid=uid();
+    const upd={...orderFor,points:Number(orderFor.points)+order.points,orders:Number(orderFor.orders)+1,history:[{...order,id:oid},...(orderFor.history||[])]};
+    try {
+      await apiPost({action:"updateClient",id:upd.id,name:upd.name,phone:upd.phone,address:upd.address,points:upd.points,orders:upd.orders,joined:upd.joined});
+      await apiPost({action:"addSale",id:oid,date:order.date,clientId:orderFor.id,clientName:orderFor.name,items:order.items.join(", "),total:order.total,points:order.points});
+      setClients(clients.map(c=>c.id===orderFor.id?upd:c));
+      setSales([{...order,id:oid,clientId:orderFor.id,clientName:orderFor.name,items:order.items},...sales]);
+      setTicket({...order,id:oid,items:order.items}); setTkClient(upd); setOrderFor(null);
+      notify("Pedido guardado en Google Sheets ✓");
+    } catch(e){ notify("Error guardando pedido."); }
+    setSaving(false);
+  }
+
+  async function deleteOrder(clientId,orderId) {
+    const c=clients.find(x=>x.id===clientId);
+    const ord=c&&(c.history||[]).find(h=>h.id===orderId);
+    if(!ord)return;
+    setSaving(true);
+    const upd={...c,points:Math.max(0,Number(c.points)-ord.points),orders:Math.max(0,Number(c.orders)-1),history:(c.history||[]).filter(h=>h.id!==orderId)};
+    try {
+      await apiPost({action:"deleteSale",id:orderId});
+      await apiPost({action:"updateClient",id:upd.id,name:upd.name,phone:upd.phone,address:upd.address,points:upd.points,orders:upd.orders,joined:upd.joined});
+      setClients(clients.map(x=>x.id===clientId?upd:x));
+      setSales(sales.filter(s=>s.id!==orderId));
+      notify("Pedido eliminado ✓");
+    } catch(e){ notify("Error eliminando pedido."); }
+    setSaving(false);
+  }
+
+  async function deleteClient(id) {
+    setSaving(true);
+    try {
+      await apiPost({action:"deleteClient",id});
+      setClients(clients.filter(c=>c.id!==id));
+      setSales(sales.filter(s=>s.clientId!==id));
+      notify("Cliente eliminado ✓");
+    } catch(e){ notify("Error eliminando."); }
+    setSaving(false);
+  }
+
+  async function saveEdit() {
+    setSaving(true);
+    try {
+      await apiPost({action:"updateClient",id:editClient.id,name:editClient.name,phone:editClient.phone,address:editClient.address,points:editClient.points,orders:editClient.orders,joined:editClient.joined});
+      setClients(clients.map(c=>c.id===editClient.id?editClient:c));
+      setEditClient(null); notify("Cliente actualizado ✓");
+    } catch(e){ notify("Error actualizando."); }
+    setSaving(false);
+  }
+
+  function addSpec() {
+    if(!specName||!specPrice)return;
+    const ni={id:"sp"+uid(),name:specName,price:parseFloat(specPrice)||0};
+    const idx=MENU_CATS.findIndex(c=>c.cat==="Especiales del Dia");
+    if(idx>=0) MENU_CATS[idx].items.push(ni);
+    else MENU_CATS.unshift({cat:"Especiales del Dia",emoji:"🌟",items:[ni]});
+    setSpecName("");setSpecPrice("");setShowSpec(false);
+    notify("Especialidad agregada");
+  }
+
+  return (
+    <div>
+      {saving&&<div style={{position:"fixed",top:0,left:0,right:0,background:B,color:"#000",textAlign:"center",padding:"6px",fontSize:13,fontWeight:700,zIndex:999}}>Guardando en Google Sheets...</div>}
+
+      <div style={g.statg}>
+        {[{l:"Clientes",v:clients.length,a:B},{l:"Ventas hoy",v:fmt(todayRev),a:"#22c55e"},{l:"Total ventas",v:fmt(totalRev),a:"#2EC4B6"},{l:"Pedidos",v:sales.length,a:"#9B5DE5"}].map(s=>(
+          <div key={s.l} style={g.stat(s.a)}>
+            <div style={g.sbar(s.a)} />
+            <div style={{fontSize:24,fontWeight:900,color:s.a,marginBottom:2}}>{s.v}</div>
+            <div style={{fontSize:12,color:"#777"}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:16,alignItems:"center"}}>
+        {[["pedidos","Pedidos"],["clientes","Clientes"],["stats","Stats"]].map(([k,l])=>(
+          <button key={k} style={g.tab(tab===k)} onClick={()=>setTab(k)}>{l}</button>
+        ))}
+        <button style={{...g.btn("g"),...g.sm,marginLeft:"auto"}} onClick={()=>setShowSpec(true)}>+ Especialidad del dia</button>
+      </div>
+
+      {tab==="pedidos"&&(
+        <div style={g.card}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <p style={{...g.h2,margin:0}}>Registrar pedido</p>
+            <button style={{...g.btn("y"),...g.sm}} onClick={()=>setShowNew(true)}>+ Nuevo cliente</button>
+          </div>
+          <input style={{...g.input,marginBottom:12}} placeholder="Buscar cliente..." value={q} onChange={e=>setQ(e.target.value)} />
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {fil.slice(0,8).map(c=>{
+              const lv=levelOf(Number(c.points));
+              return(
+                <div key={c.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#111",borderRadius:10,padding:"10px 14px",border:"1px solid #1e1e1e"}}>
+                  <div>
+                    <span style={{fontWeight:700}}>{c.name}</span>
+                    <span style={{color:"#666",fontSize:12,marginLeft:8}}>{c.phone}</span>
+                    <span style={{...g.badge(lv.color),marginLeft:8}}>{lv.label}</span>
+                    {c.address&&<div style={{fontSize:11,color:"#555"}}>📍 {c.address}</div>}
+                  </div>
+                  <div style={g.flex}>
+                    <span style={{color:B,fontWeight:800,fontSize:14}}>{c.points} pts</span>
+                    <button style={{...g.btn("y"),...g.sm}} onClick={()=>setOrderFor(c)}>+ Pedido</button>
+                  </div>
+                </div>
+              );
+            })}
+            {fil.length===0&&<p style={{color:"#555",fontSize:13,textAlign:"center"}}>No encontrado — <span style={{color:B,cursor:"pointer",fontWeight:700}} onClick={()=>setShowNew(true)}>registrar nuevo cliente</span></p>}
+          </div>
+        </div>
+      )}
+
+      {tab==="clientes"&&(
+        <div style={g.card}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <p style={{...g.h2,margin:0}}>Clientes ({clients.length})</p>
+            <div style={g.flex}>
+              <input style={{...g.input,width:200}} placeholder="Buscar..." value={q} onChange={e=>setQ(e.target.value)} />
+              <button style={{...g.btn("y"),...g.sm}} onClick={()=>setShowNew(true)}>+ Nuevo</button>
+            </div>
+          </div>
+          <table style={g.tbl}>
+            <thead><tr>{["Cliente","Telefono","Dir","Pedidos","Puntos","Nivel",""].map(h=><th key={h} style={g.th}>{h}</th>)}</tr></thead>
+            <tbody>
+              {fil.map(c=>{const lv=levelOf(Number(c.points));return(
+                <tr key={c.id}>
+                  <td style={g.td}><div style={{fontWeight:700}}>{c.name}</div><div style={{fontSize:11,color:"#555"}}>{c.joined}</div></td>
+                  <td style={{...g.td,color:"#888"}}>{c.phone}</td>
+                  <td style={{...g.td,color:"#777",fontSize:12}}>{c.address||"—"}</td>
+                  <td style={g.td}>{c.orders}</td>
+                  <td style={g.td}><span style={{color:B,fontWeight:800}}>{c.points}</span></td>
+                  <td style={g.td}><span style={g.badge(lv.color)}>{lv.label}</span></td>
+                  <td style={g.td}>
+                    <div style={g.flex}>
+                      <button style={{...g.btn(),...g.sm}} onClick={()=>setEditClient({...c})}>Editar</button>
+                      <button style={{...g.btn("r"),...g.sm}} onClick={()=>{if(window.confirm("Eliminar a "+c.name+"?"))deleteClient(c.id);}}>Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
+              );})}
+            </tbody>
+          </table>
+          {fil.slice(0,5).map(c=>(c.history||[]).length>0&&(
+            <div key={"h"+c.id} style={{marginTop:14,borderTop:"1px solid #222",paddingTop:12}}>
+              <p style={{fontWeight:700,fontSize:13,marginBottom:8,color:B}}>{c.name} — historial</p>
+              <table style={g.tbl}>
+                <thead><tr>{["Fecha","Productos","Total","Pts",""].map(h=><th key={h} style={g.th}>{h}</th>)}</tr></thead>
+                <tbody>{(c.history||[]).map(h=>(
+                  <tr key={h.id}>
+                    <td style={{...g.td,color:"#777",fontSize:12}}>{h.date}</td>
+                    <td style={{...g.td,color:"#888",fontSize:12}}>{Array.isArray(h.items)?h.items.join(", "):h.items}</td>
+                    <td style={{...g.td,color:B,fontWeight:700}}>{fmt(h.total)}</td>
+                    <td style={{...g.td,color:"#22c55e",fontWeight:700}}>+{h.points}</td>
+                    <td style={g.td}><button style={{...g.btn("r"),...g.sm}} onClick={()=>{if(window.confirm("Eliminar pedido?"))deleteOrder(c.id,h.id);}}>Eliminar</button></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="stats"&&(
+        <div>
+          <div style={g.card}>
+            <p style={g.h2}>Productos mas vendidos</p>
+            {top.length===0?<p style={{color:"#555",fontSize:13}}>Sin ventas aun.</p>:top.map(([name,qty],i)=>(
+              <div key={name} style={{marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}><span><span style={{color:B,fontWeight:800}}>#{i+1}</span> {name}</span><span style={{color:B,fontWeight:700}}>{qty}x</span></div>
+                <div style={{background:"#222",borderRadius:999,height:5}}><div style={{background:B,height:"100%",width:((qty/top[0][1])*100)+"%",borderRadius:999}} /></div>
+              </div>
+            ))}
+          </div>
+          <div style={g.card}>
+            <p style={g.h2}>Ultimos pedidos</p>
+            {sales.length===0?<p style={{color:"#555",fontSize:13}}>Sin pedidos.</p>
+              :<table style={g.tbl}><thead><tr>{["Fecha","Cliente","Productos","Total","Pts"].map(h=><th key={h} style={g.th}>{h}</th>)}</tr></thead>
+              <tbody>{sales.slice(0,15).map(s=>(
+                <tr key={s.id}>
+                  <td style={{...g.td,color:"#777",fontSize:12}}>{s.date}</td>
+                  <td style={{...g.td,fontWeight:600}}>{s.clientName}</td>
+                  <td style={{...g.td,color:"#888",fontSize:12}}>{Array.isArray(s.items)?s.items.join(", "):s.items}</td>
+                  <td style={{...g.td,color:B,fontWeight:700}}>{fmt(s.total)}</td>
+                  <td style={{...g.td,color:"#22c55e",fontWeight:700}}>+{s.points}</td>
+                </tr>
+              ))}</tbody></table>}
+          </div>
+        </div>
+      )}
+
+      {showNew&&(
+        <div style={g.overlay}>
+          <div style={{...g.modal,maxWidth:380}}>
+            <p style={{...g.h2,color:B}}>Nuevo cliente</p>
+            {[["Nombre completo","name"],["Telefono","phone"],["Direccion","address"]].map(([lb,k])=>(
+              <div key={k} style={{marginBottom:10}}>
+                <div style={{fontSize:12,color:"#888",marginBottom:4}}>{lb}</div>
+                <input style={g.input} value={nf[k]} onChange={e=>setNf({...nf,[k]:e.target.value})} onKeyDown={e=>e.key==="Enter"&&reg()} />
+              </div>
+            ))}
+            <div style={{...g.flex,marginTop:14}}>
+              <button style={{...g.btn("y"),flex:1}} onClick={reg} disabled={saving}>Registrar y Guardar</button>
+              <button style={g.btn("r")} onClick={()=>setShowNew(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editClient&&(
+        <div style={g.overlay}>
+          <div style={{...g.modal,maxWidth:380}}>
+            <p style={{...g.h2,color:B}}>Editar cliente</p>
+            {[["Nombre","name"],["Telefono","phone"],["Direccion","address"]].map(([lb,k])=>(
+              <div key={k} style={{marginBottom:10}}>
+                <div style={{fontSize:12,color:"#888",marginBottom:4}}>{lb}</div>
+                <input style={g.input} value={editClient[k]||""} onChange={e=>setEditClient({...editClient,[k]:e.target.value})} />
+              </div>
+            ))}
+            <div style={{...g.flex,marginTop:14}}>
+              <button style={{...g.btn("y"),flex:1}} onClick={saveEdit} disabled={saving}>Guardar</button>
+              <button style={g.btn("r")} onClick={()=>setEditClient(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSpec&&(
+        <div style={g.overlay}>
+          <div style={{...g.modal,maxWidth:360}}>
+            <p style={{...g.h2,color:B}}>Especialidad del dia</p>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:12,color:"#888",marginBottom:4}}>Nombre del platillo</div>
+              <input style={g.input} value={specName} onChange={e=>setSpecName(e.target.value)} placeholder="Ej: Pollo al horno especial" />
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:12,color:"#888",marginBottom:4}}>Precio ($)</div>
+              <input style={g.input} type="number" value={specPrice} onChange={e=>setSpecPrice(e.target.value)} placeholder="3.50" />
+            </div>
+            <div style={{...g.flex,marginTop:14}}>
+              <button style={{...g.btn("y"),flex:1}} onClick={addSpec}>Agregar</button>
+              <button style={g.btn("r")} onClick={()=>setShowSpec(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {orderFor&&<OrderModal client={orderFor} onConfirm={confirmOrder} close={()=>setOrderFor(null)} />}
+      {ticket&&tkClient&&<Ticket order={ticket} client={tkClient} close={()=>{setTicket(null);setTkClient(null);}} />}
+    </div>
+  );
+}
+
+function ClientView({clients,setClients,notify}) {
+  const [ph,setPh]=useState("");
+  const [cl,setCl]=useState(null);
+
+  function look() {
+    const f=clients.find(c=>String(c.phone)===ph.replace(/\s/g,""));
+    if(f) setCl(f);
+    else notify("Numero no encontrado.");
+  }
+
+  async function redeem(r) {
+    if(Number(cl.points)<r.pts)return;
+    const upd={...cl,points:Number(cl.points)-r.pts};
+    try {
+      await apiPost({action:"updateClient",id:upd.id,name:upd.name,phone:upd.phone,address:upd.address,points:upd.points,orders:upd.orders,joined:upd.joined});
+      setClients(clients.map(c=>c.id===cl.id?upd:c));
+      setCl(upd);
+      notify("Canjeaste: "+r.label+" ✓");
+    } catch(e){ notify("Error canjeando."); }
+  }
+
+  const nr   = REWARDS.find(r=>cl&&r.pts>Number(cl.points));
+  const prog = cl&&nr?Math.min((Number(cl.points)/nr.pts)*100,100):100;
+  const ini  = cl?cl.name.split(" ").map(n=>n[0]).slice(0,2).join(""):"";
+
+  if(!cl) return(
+    <div style={{maxWidth:360,margin:"0 auto"}}>
+      <div style={{...g.card,textAlign:"center",padding:"44px 24px"}}>
+        <div style={{fontSize:48,marginBottom:8}}>☕</div>
+        <div style={{fontSize:22,fontWeight:900,color:B,marginBottom:4}}>Galileo's Points</div>
+        <div style={{color:"#666",fontSize:13,marginBottom:24}}>Ingresa tu telefono para ver tus puntos</div>
+        <input style={{...g.input,textAlign:"center",fontSize:16,letterSpacing:2,marginBottom:12}} placeholder="Numero de telefono" value={ph} onChange={e=>setPh(e.target.value)} onKeyDown={e=>e.key==="Enter"&&look()} />
+        <button style={{...g.btn("y"),width:"100%",padding:"12px"}} onClick={look}>Ver mis puntos</button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{maxWidth:380,margin:"0 auto"}}>
+      <div style={{...g.card,textAlign:"center",marginBottom:14}}>
+        <div style={{width:56,height:56,borderRadius:"50%",background:B+"22",border:"2px solid "+B,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:900,color:B,margin:"0 auto 8px"}}>{ini}</div>
+        <div style={{fontSize:17,fontWeight:800}}>{cl.name}</div>
+        <div style={{color:"#666",fontSize:12,marginBottom:16}}>{cl.phone}</div>
+        <div style={{width:84,height:84,borderRadius:"50%",border:"5px solid "+B,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",background:B+"11"}}>
+          <div style={{fontSize:24,fontWeight:900,color:B,lineHeight:1}}>{cl.points}</div>
+          <div style={{fontSize:10,color:"#888"}}>puntos</div>
+        </div>
+        {nr&&(<div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#777",marginBottom:4}}><span>Proximo: {nr.label}</span><span>{cl.points}/{nr.pts}</span></div>
+          <div style={{background:"#222",borderRadius:999,height:5}}><div style={{background:B,height:"100%",width:prog+"%",borderRadius:999,transition:"width 0.5s"}} /></div>
+        </div>)}
+        <div style={{fontSize:11,color:"#555",marginTop:8}}>{cl.orders} pedidos</div>
+      </div>
+      <div style={g.card}>
+        <p style={g.h2}>Premios</p>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          {REWARDS.map(r=>{const can=Number(cl.points)>=r.pts;return(
+            <div key={r.id} onClick={()=>can&&redeem(r)} style={{background:can?r.color+"18":"#111",border:"1px solid "+(can?r.color:"#1e1e1e"),borderRadius:10,padding:12,cursor:can?"pointer":"default",opacity:can?1:0.4}}>
+              <div style={{fontWeight:700,fontSize:12,marginBottom:2}}>{r.label}</div>
+              <div style={{fontSize:11,color:can?r.color:"#555",fontWeight:700}}>{r.pts} pts {can&&"✓"}</div>
+            </div>
+          );})}
+        </div>
+      </div>
+      {(cl.history||[]).length>0&&(
+        <div style={g.card}>
+          <p style={g.h2}>Ultimas visitas</p>
+          {(cl.history||[]).slice(0,4).map((h,i)=>(
+            <div key={i} style={{borderBottom:"1px solid #1a1a1a",padding:"8px 0",fontSize:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><span style={{color:"#888"}}>{h.date}</span><span style={{color:B,fontWeight:700}}>{fmt(h.total)}</span></div>
+              <div style={{color:"#666"}}>{Array.isArray(h.items)?h.items.join(", "):h.items}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <button style={{...g.btn(),width:"100%"}} onClick={()=>setCl(null)}>Volver</button>
+    </div>
+  );
+}
+
+function App() {
+  const [view,setView]       = useState("admin");
+  const [clients,setClients] = useState([]);
+  const [sales,setSales]     = useState([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError]     = useState(null);
+  const [toast,setToast]     = useState(null);
+
+  useEffect(()=>{
+    async function load() {
+      try {
+        const [cr,sr] = await Promise.all([apiGet("getClients"),apiGet("getSales")]);
+        if(cr.ok) setClients(cr.data||[]);
+        if(sr.ok) setSales(sr.data||[]);
+      } catch(e){
+        setError("No se pudo conectar con Google Sheets. Verificá tu conexión.");
+      }
+      setLoading(false);
+    }
+    load();
+  },[]);
+
+  function notify(msg){setToast(msg);setTimeout(()=>setToast(null),3000);}
+
+  if(loading) return(
+    <div style={{...g.page,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+      <div style={{fontSize:48}}>☕</div>
+      <div style={{color:B,fontWeight:700,fontSize:18}}>Cargando Galileo's Points...</div>
+      <div style={{color:"#666",fontSize:13}}>Conectando con Google Sheets</div>
+    </div>
+  );
+
+  if(error) return(
+    <div style={{...g.page,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16,padding:24}}>
+      <div style={{fontSize:48}}>⚠️</div>
+      <div style={{color:"#ff5555",fontWeight:700,fontSize:16,textAlign:"center"}}>{error}</div>
+    </div>
+  );
+
+  return(
+    <>
+      <style>{`
+        *{box-sizing:border-box;}body{margin:0;background:#0A0A0A;font-family:system-ui,sans-serif;}
+        input::placeholder{color:#555;}input:focus{border-color:${B}!important;}
+        button:hover:not(:disabled){opacity:0.82;transform:translateY(-1px);}
+        button:disabled{opacity:0.35;cursor:not-allowed!important;}
+        ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
+      `}</style>
+      <div style={g.page}>
+        <nav style={g.nav}>
+          <div style={g.logo}>☕ Galileo's Points</div>
+          <div style={{display:"flex",gap:4}}>
+            <button style={g.tab(view==="admin")}  onClick={()=>setView("admin")}>Panel Admin</button>
+            <button style={g.tab(view==="client")} onClick={()=>setView("client")}>Vista Cliente</button>
+          </div>
+        </nav>
+        <main style={g.main}>
+          {view==="admin"
+            ?<AdminView clients={clients} setClients={setClients} sales={sales} setSales={setSales} notify={notify}/>
+            :<ClientView clients={clients} setClients={setClients} notify={notify}/>}
+        </main>
+      </div>
+      {toast&&<Toast msg={toast} hide={()=>setToast(null)}/>}
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
